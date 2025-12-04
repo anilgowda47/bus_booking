@@ -1,5 +1,5 @@
 pipeline {
-    agent { label 'bus' }
+    agent { label 'dev' }
 tools {
         jdk 'JDK17'
         maven 'maven'
