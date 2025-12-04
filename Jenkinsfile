@@ -1,72 +1,70 @@
 pipeline {
-    agent {
-        label 'king'
+    agent { label 'bus' }
+tools {
+        jdk 'JDK17'
+        maven 'maven'
     }
+ stages {
 
-    environment {
-        TOMCAT_HOST = '172.31.3.184'
-        TOMCAT_USER = 'root'
-        TOMCAT_DIR = '/opt/apache-tomcat-8.5.98/webapps'
-        JAR_FILE = 'bus-booking-app-1.0-SNAPSHOT.jar'  // Replace with the actual name of your JAR file
-    }
-
-    stages {
-        stage('checkout') {
+        stage('Checkout') {
             steps {
                 sh 'rm -rf bus_booking'
-                sh 'git clone https://github.com/sudhasanshi/bus_booking.git'
+                sh 'git clone "https://github.com/anilgowda47/bus_booking.git"'
             }
         }
 
-        stage('build') {
+        stage('Build') {
+           steps {
+               sh 'mvn clean install' 
+            }
+        }
+
+  stage('Push the artifacts into JFrog Artifactory') {
             steps {
-                script {
-                    def mvnHome = tool 'Maven'
-                    def mvnCMD = "${mvnHome}/bin/mvn"
-                    sh "${mvnCMD} clean install"
+                dir('bus_booking') {
+                    script {
+
+                        // WAR or JAR file path (modify based on your project)
+                        def ARTIFACT = "${env.WORKSPACE}/bus_booking/target/news-app.war"
+
+                        // Timestamp folder
+                        def currentDate = new java.text.SimpleDateFormat("yyyy-MM-dd_HH-mm").format(new Date())
+
+                        // Target folder inside Artifactory repo
+                        def targetPath = "feature_release1/${currentDate}/"
+
+                        echo "Uploading artifact: ${ARTIFACT}"
+                        echo "Target path: ${targetPath}"
+
+                        rtUpload(
+                            serverId: "jfrog",
+                            spec: """{
+                                "files": [
+                                    {
+                                        "pattern": "${ARTIFACT}",
+                                        "target": "${targetPath}"
+                                    }
+                                ]
+                            }"""
+                        )
+                    }
                 }
             }
         }
 
-        stage('Show Contents of target') {
-            steps {
-                script {
-                    // Print the contents of the target directory
-                    sh 'ls -l target'
-                }
+        stage('Application') { 
+            steps { 
+ 
+                sh 'sleep 10'
+                sh 'echo "bus_booking app is running after 10sec"'
+                sh 'nohup mvn spring-boot:run > app.log 2>&1 &'
+        
+                sh 'sleep 60'
+                sh 'echo "bus_booking app is stopping after 1 minute"'
+                sh 'mvn spring-boot:stop'
+               
             }
-        }
-
-        stage('Run JAR Locally') {
-            steps {
-                script {
-                    // Run the JAR file using java -jar
-                    sh "java -jar target/${JAR_FILE}"
-                }
-            }
-        }
-
-        stage('Deploy JAR to Tomcat') {
-            steps {
-                script {
-                    // Copy JAR to Tomcat server
-                    sh "scp target/${JAR_FILE} ${TOMCAT_USER}@${TOMCAT_HOST}:${TOMCAT_DIR}/"
-
-                    // SSH into Tomcat server and restart Tomcat
-                    sh "ssh ${TOMCAT_USER}@${TOMCAT_HOST} 'bash -s' < restart-tomcat.sh"
-
-                    echo "Application deployed and Tomcat restarted"
-                }
-            }
-        }
-    }
-
-    post {
-        success {
-            echo "Build, Run, and Deployment to Tomcat successful!"
-        }
-        failure {
-            echo "Build, Run, and Deployment to Tomcat failed!"
         }
     }
 }
+
