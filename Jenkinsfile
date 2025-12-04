@@ -1,70 +1,62 @@
 pipeline {
     agent { label 'dev' }
-tools {
-        jdk 'JDK17'
-        maven 'maven'
-    }
- stages {
+
+    stages {
 
         stage('Checkout') {
             steps {
-                sh 'rm -rf bus_booking'
-                sh 'git clone "https://github.com/anilgowda47/bus_booking.git"'
+                sh "rm -rf news-app-devops"
+                sh "git clone 'https://github.com/anilgowda47/bus_booking.git'"
             }
         }
 
-        stage('Build') {
-           steps {
-               sh 'mvn clean install' 
-            }
-        }
-
-  stage('Push the artifacts into JFrog Artifactory') {
+        stage('Version & Build') {
             steps {
-                dir('bus_booking') {
-                    script {
+                script {
+                    def version = "1.0.${env.BUILD_NUMBER}"
+                    echo "Setting project version to ${version}"
 
-                        // WAR or JAR file path (modify based on your project)
-                        def ARTIFACT = "${env.WORKSPACE}/bus_booking/target/news-app.war"
-
-                        // Timestamp folder
-                        def currentDate = new java.text.SimpleDateFormat("yyyy-MM-dd_HH-mm").format(new Date())
-
-                        // Target folder inside Artifactory repo
-                        def targetPath = "feature_release1/${currentDate}/"
-
-                        echo "Uploading artifact: ${ARTIFACT}"
-                        echo "Target path: ${targetPath}"
-
-                        rtUpload(
-                            serverId: "jfrog",
-                            spec: """{
-                                "files": [
-                                    {
-                                        "pattern": "${ARTIFACT}",
-                                        "target": "${targetPath}"
-                                    }
-                                ]
-                            }"""
-                        )
-                    }
+                    sh """
+                        cd ${env.WORKSPACE}
+                        mvn versions:set -DnewVersion=${version}
+                        mvn clean package
+                    """
                 }
             }
         }
 
-        stage('Application') { 
-            steps { 
- 
-                sh 'sleep 10'
-                sh 'echo "bus_booking app is running after 10sec"'
-                sh 'nohup mvn spring-boot:run > app.log 2>&1 &'
-        
-                sh 'sleep 60'
-                sh 'echo "bus_booking app is stopping after 1 minute"'
-                sh 'mvn spring-boot:stop'
-               
+        stage('Test') {
+            steps {
+                sh "cd ${env.WORKSPACE} && mvn test"
             }
         }
+
+        stage('Push the artifacts into JFrog Artifactory') {
+            steps {
+                script {
+                    echo "JFrog Artifactory upload skipped - Dummy stage for testing only."
+                    echo "WAR file would have been: ${env.WORKSPACE}/target/news-app.war"
+                    echo "Target path would have been: feature_release1/<timestamp>/"
+                }
+            }
+        }
+
+        stage('Deploy to Tomcat') {
+            steps {
+                sh """
+                    echo 'Cleaning old deployment'
+                    sudo rm -rf /opt/tomcat10/webapps/news-app /opt/tomcat10/webapps/news-app*.war
+
+                    echo 'Copying new WAR'
+                    sudo cp ${env.WORKSPACE}/target/news-app.war /opt/tomcat10/webapps/
+
+                    echo 'Restarting Tomcat'
+                    sudo /opt/tomcat10/bin/shutdown.sh || true
+                    sleep 2
+                    sudo /opt/tomcat10/bin/startup.sh
+                """
+            }
+        }
+
     }
 }
-
