@@ -21,7 +21,7 @@ pipeline {
             }
         }
 
-        stage('Push the artifacts into JFrog Artifactory (Dummy)') {
+        stage('Push the artifacts into JFrog Artifactory (test)') {
             steps {
                 dir('bus_booking') {
                     script {
