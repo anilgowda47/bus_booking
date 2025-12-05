@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 ==========================================================================================================================================================================
 #!/bin/bash
@@ -7,6 +8,19 @@ set -e
 echo "Starting installation of Java 11 and Maven..."
 
 # Install Java 17
+=======
+# Bus Booking Application
+
+This repository contains the source code for the Bus Booking Application built with Spring Boot. It includes the necessary steps to build, deploy, and test the application, as well as CI/CD pipelines using both GitHub Actions and Jenkins.
+
+Shell script to setup the environment.
+
+#!/bin/bash
+set -e
+echo "Starting Maven project setup..."
+
+# Step 1: Install Java 11
+>>>>>>> feature-1
 if ! java -version &>/dev/null; then
     echo "Installing Java 17..."
     sudo apt update
@@ -28,6 +42,7 @@ if ! grep -q "JAVA_HOME=$JAVA_HOME_PATH" /etc/environment; then
 else
     echo "JAVA_HOME is already set."
 fi
+<<<<<<< HEAD
 
 # Install Maven
 if ! mvn -version &>/dev/null; then
@@ -40,6 +55,9 @@ fi
 
 echo "Setup completed successfully."
 ============================================================================================================================================================================
+=======
+================================================================================================================================================
+>>>>>>> feature-1
 #!/bin/bash
 
 # Step 1: Set up Maven environment
@@ -97,7 +115,10 @@ GitHub Actions CI/CD Pipeline
 This project includes a GitHub Actions CI pipeline that automatically builds, tests, and deploys the Spring Boot application whenever you push changes to the repository.
 
 ==========================================================================================================================================================================
+<<<<<<< HEAD
 ==========================================================================================================================================================================
+=======
+>>>>>>> feature-1
 
 .github/workflows/java-ci.yml
 yaml
@@ -126,7 +147,11 @@ jobs:
         - name: Set up Java
         uses: actions/setup-java@v3
         with:
+<<<<<<< HEAD
           java-version: '17'
+=======
+          java-version: '11'
+>>>>>>> feature-1
           distribution: 'temurin'
 
       # Cache Maven dependencies
@@ -194,7 +219,10 @@ Gracefully stop the Spring Boot application: Stops the Spring Boot app using the
 Jenkins Pipeline
 The following Jenkins pipeline (Jenkinsfile) can be used for CI/CD with Jenkins.
 ===========================================================================================================================================================================
+<<<<<<< HEAD
 ===========================================================================================================================================================================
+=======
+>>>>>>> feature-1
 Jenkinsfile
 groovy
 Copy code
