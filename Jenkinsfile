@@ -43,7 +43,7 @@ pipeline {
         stage('Application') { 
             steps { 
                 sh 'sleep 10'
-                sh 'echo "bus_booking application is running after 10 sec"'
+                sh 'echo "bus_booking app is running after 10 sec"'
                 sh 'nohup mvn spring-boot:run > app.log 2>&1 &'
 
                 sh 'sleep 60'
